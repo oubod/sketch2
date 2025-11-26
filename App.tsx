@@ -55,25 +55,19 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
 
         if (data.user) {
           console.log('User authenticated, fetching profile...');
+          console.log('User ID:', data.user.id);
+          console.log('User email:', data.user.email);
           
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Profile fetch timeout after 5 seconds')), 5000);
-          });
-          
-          // Fetch user profile from database with timeout
+          // Fetch user profile from database with fallback creation
           try {
-            const queryPromise = supabase
+            console.log('Starting profile query...');
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', data.user.id)
-              .single();
+              .maybeSingle();
             
-            // Race the actual query execution with proper typing
-            const result = await Promise.race([queryPromise, timeoutPromise]) as { data: any, error: any };
-            const { data: profile, error: profileError } = result;
-            
-            console.log('Profile fetch result:', { profile, profileError });
+            console.log('Profile query completed:', { profile, profileError });
 
             if (profileError) {
               console.error('Profile fetch error:', profileError);
@@ -81,22 +75,51 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
               return;
             }
 
+            // If no profile exists, create one
             if (!profile) {
-              console.log('No profile found for user:', data.user.id);
-              setError('Profil utilisateur non trouvé. Veuillez vous inscrire.');
-              return;
-            }
+              console.log('No profile found, creating one for user:', data.user.id);
+              
+              console.log('Starting profile creation...');
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: data.user.email || '',
+                  name: data.user.user_metadata?.name || 'Utilisateur',
+                  year_level: data.user.user_metadata?.year_level || 'PCEM1'
+                })
+                .select()
+                .single();
 
-            console.log('Login successful, calling onLogin...');
-            onLogin({
-              id: profile.id,
-              email: profile.email,
-              name: profile.name,
-              year: profile.year_level as YearLevel
-            });
-          } catch (timeoutError) {
-            console.error('Profile fetch failed:', timeoutError);
-            setError('La connexion au profil a expiré. Veuillez réessayer.');
+              console.log('Profile creation completed:', { newProfile, createError });
+
+              if (createError) {
+                console.error('Profile creation error:', createError);
+                setError(`Erreur création profil: ${createError.message}`);
+                return;
+              }
+
+              console.log('Profile created successfully:', newProfile);
+              console.log('Calling onLogin with new profile...');
+              onLogin({
+                id: newProfile.id,
+                email: newProfile.email,
+                name: newProfile.name,
+                year: newProfile.year_level as YearLevel
+              });
+            } else {
+              console.log('Profile found successfully:', profile);
+              console.log('Calling onLogin with existing profile...');
+              onLogin({
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+                year: profile.year_level as YearLevel
+              });
+            }
+          } catch (err) {
+            console.error('Unexpected error during profile fetch:', err);
+            setError(`Erreur inattendue: ${err instanceof Error ? err.message : 'Veuillez réessayer.'}`);
             return;
           }
         } else {
@@ -128,22 +151,13 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
         if (data.user) {
           console.log('User registered, fetching profile...');
           
-          // Add timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Profile fetch timeout after 5 seconds')), 5000);
-          });
-          
-          // Fetch user profile from database with timeout
+          // Fetch user profile from database with fallback creation
           try {
-            const queryPromise = supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', data.user.id)
-              .single();
-            
-            // Race the actual query execution with proper typing
-            const result = await Promise.race([queryPromise, timeoutPromise]) as { data: any, error: any };
-            const { data: profile, error: profileError } = result;
+              .maybeSingle();
             
             console.log('Profile fetch result after registration:', { profile, profileError });
 
@@ -153,22 +167,47 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
               return;
             }
 
+            // If no profile exists, create one
             if (!profile) {
-              console.log('No profile found after registration for user:', data.user.id);
-              setError('Profil utilisateur non trouvé après inscription.');
-              return;
-            }
+              console.log('No profile found after registration, creating one for user:', data.user.id);
+              
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: data.user.email || '',
+                  name: data.user.user_metadata?.name || formData.fullName || 'Utilisateur',
+                  year_level: data.user.user_metadata?.year_level || formData.year || 'PCEM1'
+                })
+                .select()
+                .single();
 
-            console.log('Registration successful, calling onLogin...');
-            onLogin({
-              id: profile.id,
-              email: profile.email,
-              name: profile.name,
-              year: profile.year_level as YearLevel
-            });
-          } catch (timeoutError) {
-            console.error('Profile fetch failed after registration:', timeoutError);
-            setError('La connexion au profil a expiré. Veuillez réessayer.');
+              if (createError) {
+                console.error('Profile creation error after registration:', createError);
+                setError(`Erreur création profil: ${createError.message}`);
+                return;
+              }
+
+              console.log('Profile created successfully after registration:', newProfile);
+              
+              onLogin({
+                id: newProfile.id,
+                email: newProfile.email,
+                name: newProfile.name,
+                year: newProfile.year_level as YearLevel
+              });
+            } else {
+              console.log('Registration successful, calling onLogin...');
+              onLogin({
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+                year: profile.year_level as YearLevel
+              });
+            }
+          } catch (err) {
+            console.error('Unexpected error during profile fetch after registration:', err);
+            setError(`Erreur inattendue: ${err instanceof Error ? err.message : 'Veuillez réessayer.'}`);
             return;
           }
         } else {
