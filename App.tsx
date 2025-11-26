@@ -56,34 +56,47 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
         if (data.user) {
           console.log('User authenticated, fetching profile...');
           
-          // Fetch user profile from database
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          console.log('Profile fetch result:', { profile, profileError });
-
-          if (profileError) {
-            console.error('Profile fetch error:', profileError);
-            setError(`Erreur profil: ${profileError.message}`);
-            return;
-          }
-
-          if (!profile) {
-            console.log('No profile found for user:', data.user.id);
-            setError('Profil utilisateur non trouvé. Veuillez vous inscrire.');
-            return;
-          }
-
-          console.log('Login successful, calling onLogin...');
-          onLogin({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            year: profile.year_level as YearLevel
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Profile fetch timeout after 5 seconds')), 5000);
           });
+          
+          // Fetch user profile from database with timeout
+          try {
+            const profilePromise = supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+            
+            const { data: profile, error: profileError } = await Promise.race([profilePromise, timeoutPromise]) as any;
+            
+            console.log('Profile fetch result:', { profile, profileError });
+
+            if (profileError) {
+              console.error('Profile fetch error:', profileError);
+              setError(`Erreur profil: ${profileError.message}`);
+              return;
+            }
+
+            if (!profile) {
+              console.log('No profile found for user:', data.user.id);
+              setError('Profil utilisateur non trouvé. Veuillez vous inscrire.');
+              return;
+            }
+
+            console.log('Login successful, calling onLogin...');
+            onLogin({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              year: profile.year_level as YearLevel
+            });
+          } catch (timeoutError) {
+            console.error('Profile fetch failed:', timeoutError);
+            setError('La connexion au profil a expiré. Veuillez réessayer.');
+            return;
+          }
         } else {
           setError('Aucune donnée utilisateur reçue de Supabase.');
         }
@@ -113,34 +126,47 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
         if (data.user) {
           console.log('User registered, fetching profile...');
           
-          // Fetch user profile from database
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          console.log('Profile fetch result after registration:', { profile, profileError });
-
-          if (profileError) {
-            console.error('Profile fetch error after registration:', profileError);
-            setError(`Erreur profil: ${profileError.message}`);
-            return;
-          }
-
-          if (!profile) {
-            console.log('No profile found after registration for user:', data.user.id);
-            setError('Profil utilisateur non trouvé après inscription.');
-            return;
-          }
-
-          console.log('Registration successful, calling onLogin...');
-          onLogin({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            year: profile.year_level as YearLevel
+          // Add timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Profile fetch timeout after 5 seconds')), 5000);
           });
+          
+          // Fetch user profile from database with timeout
+          try {
+            const profilePromise = supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .single();
+            
+            const { data: profile, error: profileError } = await Promise.race([profilePromise, timeoutPromise]) as any;
+            
+            console.log('Profile fetch result after registration:', { profile, profileError });
+
+            if (profileError) {
+              console.error('Profile fetch error after registration:', profileError);
+              setError(`Erreur profil: ${profileError.message}`);
+              return;
+            }
+
+            if (!profile) {
+              console.log('No profile found after registration for user:', data.user.id);
+              setError('Profil utilisateur non trouvé après inscription.');
+              return;
+            }
+
+            console.log('Registration successful, calling onLogin...');
+            onLogin({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              year: profile.year_level as YearLevel
+            });
+          } catch (timeoutError) {
+            console.error('Profile fetch failed after registration:', timeoutError);
+            setError('La connexion au profil a expiré. Veuillez réessayer.');
+            return;
+          }
         } else {
           setError('Aucune donnée utilisateur reçue lors de l\'inscription.');
         }
