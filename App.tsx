@@ -972,6 +972,27 @@ export default function App() {
   const [currentSubject, setCurrentSubject] = useState<Subject | null>(null);
   const [activeContent, setActiveContent] = useState<{ type: ContentType, item: any } | null>(null);
   const [view, setView] = useState<'dashboard' | 'planning' | 'repetition' | 'subject'>('dashboard');
+
+  // Handle body scroll lock and escape key for mobile menu
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      
+      const handleEscape = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setMobileMenuOpen(false);
+        }
+      };
+      
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [mobileMenuOpen]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // PWA Install Prompt State
@@ -1221,6 +1242,82 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* MOBILE MENU OVERLAY */}
+      {mobileMenuOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div 
+            className="fixed top-0 left-0 h-full w-80 bg-gray-50 border-r-2 border-sketch-black z-50 md:hidden flex flex-col animate-in slide-in-from-left"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navigation mobile"
+          >
+            <div className="h-16 border-b-2 border-sketch-black bg-white flex items-center justify-between px-4">
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold text-gray-500">
+                  <UserIcon />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">{user.name}</p>
+                  <p className="text-xs text-gray-400">{user.year}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              <SidebarCalendar />
+              
+              <div className="mt-8 space-y-4">
+                <h4 className="font-black text-xs uppercase tracking-widest text-gray-400 mb-2">Années & Matières</h4>
+                {Object.entries(MOCK_CURRICULUM).map(([year, subjects]) => (
+                  <div key={year} className="border-b border-gray-200 pb-2 last:border-0">
+                    <button 
+                      onClick={() => {
+                        handleYearSelect(year as YearLevel);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between py-2 px-1 hover:bg-gray-100 rounded-lg group"
+                    >
+                      <span className="font-bold text-lg">{year}</span>
+                      <ChevronDown size={16} className={`text-gray-400 transition-transform ${currentYear === year ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {currentYear === year && (
+                      <div className="mt-1 ml-2 space-y-1 animate-in slide-in-from-top-2">
+                         {subjects.map(subject => (
+                           <button
+                             key={subject.id}
+                             onClick={() => handleSubjectSelect(subject)}
+                             className={`
+                               w-full text-left py-2 px-3 rounded-md text-sm font-medium flex items-center gap-3 transition-all
+                               ${currentSubject?.id === subject.id ? 'bg-sketch-black text-white shadow-md' : 'hover:bg-gray-200 text-gray-600'}
+                             `}
+                           >
+                             <span>{SUBJECT_ICONS[subject.icon] || '📚'}</span>
+                             <span>{subject.name}</span>
+                             <ChevronRight className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" size={14} />
+                           </button>
+                         ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* CONTENT */}
       <div className="flex-1 flex overflow-hidden relative">
