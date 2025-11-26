@@ -58,6 +58,18 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
           console.log('User ID:', data.user.id);
           console.log('User email:', data.user.email);
           
+          // Test Supabase connectivity first
+          try {
+            console.log('Testing Supabase connectivity...');
+            const { data: testData, error: testError } = await supabase
+              .from('profiles')
+              .select('id')
+              .limit(1);
+            console.log('Connectivity test result:', { testData, testError });
+          } catch (testErr) {
+            console.error('Connectivity test failed:', testErr);
+          }
+          
           // Fetch user profile from database with fallback creation
           try {
             console.log('Starting profile query...');
