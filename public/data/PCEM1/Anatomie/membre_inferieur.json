@@ -1,0 +1,9 @@
+{
+  "id": "l-mbr-inf",
+  "title": "Ostéologie Membre Inférieur",
+  "duration": "60 min",
+  "sections": [
+    { "id": "b1", "type": "heading", "content": "Le Fémur" },
+    { "id": "b2", "type": "paragraph", "content": "Os le plus long et le plus lourd du corps humain." }
+  ]
+}

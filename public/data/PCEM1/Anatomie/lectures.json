@@ -1,0 +1,14 @@
+[
+  {
+    "id": "l-mbr-sup",
+    "title": "Ostéologie Membre Supérieur",
+    "duration": "60 min",
+    "file": "membre_superieur.json"
+  },
+  {
+    "id": "l-mbr-inf",
+    "title": "Ostéologie Membre Inférieur",
+    "duration": "60 min",
+    "file": "membre_inferieur.json"
+  }
+]

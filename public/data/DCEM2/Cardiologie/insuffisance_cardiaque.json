@@ -1,0 +1,9 @@
+{
+  "id": "l-ic",
+  "title": "Insuffisance Cardiaque",
+  "duration": "100 min",
+  "sections": [
+    { "id": "i1", "type": "heading", "content": "Classification FEVG" },
+    { "id": "i2", "type": "paragraph", "content": "IC à FEVG réduite (<40%), IC à FEVG préservée (≥50%), IC à FEVG modérément réduite (40-49%)." }
+  ]
+}

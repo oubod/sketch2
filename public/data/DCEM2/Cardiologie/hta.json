@@ -1,0 +1,15 @@
+{
+  "id": "l-hta",
+  "title": "Hypertension Artérielle (HTA)",
+  "duration": "90 min",
+  "sections": [
+    { "id": "c1", "type": "heading", "content": "1. Définition et Diagnostic" },
+    { "id": "c2", "type": "paragraph", "content": "L'HTA est définie par une Pression Artérielle Systolique (PAS) ≥ 140 mmHg et/ou une Pression Artérielle Diastolique (PAD) ≥ 90 mmHg, mesurée au cabinet." },
+    { "id": "c3", "type": "highlight", "content": "MNÉMOTECHNIQUE: Règle des 3 consultations pour confirmer le diagnostic (sauf HTA sévère d'emblée).", "color": "pink" },
+    { "id": "c4", "type": "heading", "content": "2. Bilan de retentissement (OMS)" },
+    { "id": "c5", "type": "bullet", "content": "Cœur: ECG (HVG), Échographie." },
+    { "id": "c6", "type": "bullet", "content": "Rein: Créatinine, DFG, Microalbuminurie." },
+    { "id": "c7", "type": "bullet", "content": "Vaisseaux: IPS, Écho-Doppler TSA." },
+    { "id": "c8", "type": "warning", "content": "L'HTA est un 'tueur silencieux'. Le patient est souvent asymptomatique jusqu'à la complication." }
+  ]
+}

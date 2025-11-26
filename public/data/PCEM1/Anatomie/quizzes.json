@@ -1,0 +1,15 @@
+[
+  {
+    "id": "q-os-1",
+    "title": "Quiz Rapide: Ostéologie",
+    "questions": [
+      {
+        "id": "q1",
+        "text": "Quel os appartient au bras ?",
+        "options": ["Radius", "Humérus", "Fémur", "Tibia"],
+        "correctIndex": 1,
+        "explanation": "L'humérus est l'os unique du bras."
+      }
+    ]
+  }
+]

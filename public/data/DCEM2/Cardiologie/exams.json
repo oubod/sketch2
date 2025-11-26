@@ -1,0 +1,23 @@
+[
+  {
+    "id": "e-2023",
+    "title": "Examen 2023 - Session 1",
+    "year": 2023,
+    "questions": [
+      {
+         "id": "e1",
+         "text": "Patient de 50 ans, douleur thoracique constrictive irradiant dans le bras gauche. Que faire en premier ?",
+         "options": ["ECG immédiat", "Scanner thoracique", "Radio pulmonaire", "Rentrer chez lui"],
+         "correctIndex": 0,
+         "explanation": "Suspicion SCA (Syndrome Coronarien Aigu). ECG 12 dérivations impératif < 10min."
+      },
+      {
+         "id": "e2",
+         "text": "Parmi les molécules suivantes, laquelle est un bêta-bloquant ?",
+         "options": ["Ramipril", "Bisoprolol", "Amlodipine", "Furosémide"],
+         "correctIndex": 1,
+         "explanation": "Les bêta-bloquants finissent souvent par -olol. Ramipril = IEC, Amlodipine = Inhibiteur calcique."
+      }
+    ]
+  }
+]

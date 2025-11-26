@@ -1,0 +1,13 @@
+{
+  "id": "l-sca",
+  "title": "Syndrome Coronarien Aigu (SCA)",
+  "duration": "120 min",
+  "sections": [
+    { "id": "s1", "type": "heading", "content": "1. Physiopathologie" },
+    { "id": "s2", "type": "paragraph", "content": "Rupture ou érosion d'une plaque d'athérome entraînant la formation d'un thrombus obstruant l'artère coronaire." },
+    { "id": "s3", "type": "highlight", "content": "URGENCE VITALE: Le temps, c'est du muscle.", "color": "red" },
+    { "id": "s4", "type": "heading", "content": "2. Signes Cliniques" },
+    { "id": "s5", "type": "bullet", "content": "Douleur thoracique rétro-sternale, constrictive, irradiant dans le bras gauche ou la mâchoire." },
+    { "id": "s6", "type": "bullet", "content": "Sueurs, nausées, angoisse." }
+  ]
+}

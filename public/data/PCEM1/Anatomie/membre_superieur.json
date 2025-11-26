@@ -1,0 +1,10 @@
+{
+  "id": "l-mbr-sup",
+  "title": "Ostéologie Membre Supérieur",
+  "duration": "60 min",
+  "sections": [
+    { "id": "a1", "type": "heading", "content": "La Clavicule" },
+    { "id": "a2", "type": "paragraph", "content": "Os long, pair, en forme de S italique." },
+    { "id": "a3", "type": "highlight", "content": "Fracture fréquente au 1/3 moyen.", "color": "yellow" }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "l-hta",
+    "title": "Hypertension Artérielle (HTA)",
+    "duration": "90 min",
+    "file": "hta.json"
+  },
+  {
+    "id": "l-sca",
+    "title": "Syndrome Coronarien Aigu (SCA)",
+    "duration": "120 min",
+    "file": "sca.json"
+  },
+  {
+    "id": "l-ic",
+    "title": "Insuffisance Cardiaque",
+    "duration": "100 min",
+    "file": "insuffisance_cardiaque.json"
+  }
+]

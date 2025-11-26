@@ -1,0 +1,5 @@
+{
+  "name": "MediSketch PWA",
+  "description": "Plateforme d'étude pour étudiants en médecine (PCEM1-DCEM4) avec style sketchbook interactif.",
+  "requestFramePermissions": []
+}
