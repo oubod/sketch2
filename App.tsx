@@ -515,10 +515,84 @@ const SubjectContentList = ({
     );
 };
 
-const SidebarCalendar = () => {
-  const [events, setEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
+const SidebarCalendar = ({ user }: { user: UserProfile | null }) => {
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [newEventTitle, setNewEventTitle] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch events from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchEvents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching calendar events:', error);
+          return;
+        }
+        
+        setEvents(data || []);
+      } catch (err) {
+        console.error('Error fetching calendar events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchEvents();
+  }, [user?.id]);
+
+  const addEvent = async (date: string, title: string) => {
+    if (!title.trim() || !user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .insert({
+          date,
+          title,
+          type: 'study',
+          user_id: user.id
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error adding calendar event:', error);
+        return;
+      }
+      
+      setEvents(prev => [...prev, data]);
+      setNewEventTitle('');
+    } catch (err) {
+      console.error('Error adding calendar event:', err);
+    }
+  };
+
+  const deleteEvent = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting calendar event:', error);
+        return;
+      }
+      
+      setEvents(prev => prev.filter(event => event.id !== id));
+    } catch (err) {
+      console.error('Error deleting calendar event:', err);
+    }
+  };
 
   const today = new Date();
   const currentMonth = today.toLocaleString('fr-FR', { month: 'long' });
@@ -601,11 +675,74 @@ const SidebarCalendar = () => {
   );
 };
 
-const PlanningBoard = () => {
-  const [tasks, setTasks] = useState<StudyTask[]>(MOCK_TASKS);
-  
-  const moveTask = (id: string, newStatus: StudyTask['status']) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
+const PlanningBoard = ({ user }: { user: UserProfile | null }) => {
+  const [tasks, setTasks] = useState<StudyTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch tasks from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchTasks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('study_tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching study tasks:', error);
+          return;
+        }
+        
+        setTasks(data || []);
+      } catch (err) {
+        console.error('Error fetching study tasks:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTasks();
+  }, [user?.id]);
+
+  const moveTask = async (id: string, newStatus: StudyTask['status']) => {
+    try {
+      const { error } = await supabase
+        .from('study_tasks')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error updating study task:', error);
+        return;
+      }
+      
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, status: newStatus } : task
+      ));
+    } catch (err) {
+      console.error('Error updating study task:', err);
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('study_tasks')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting study task:', error);
+        return;
+      }
+      
+      setTasks(prev => prev.filter(task => task.id !== id));
+    } catch (err) {
+      console.error('Error deleting study task:', err);
+    }
   };
 
   const Column = ({ title, status, color }: { title: string, status: StudyTask['status'], color: string }) => (
@@ -641,13 +778,70 @@ const PlanningBoard = () => {
   );
 };
 
-const SpacedRepetition = () => {
+const SpacedRepetition = ({ user }: { user: UserProfile | null }) => {
   const [mode, setMode] = useState<'practice' | 'history'>('practice');
-  const [cards, setCards] = useState<Flashcard[]>(MOCK_FLASHCARDS);
+  const [cards, setCards] = useState<Flashcard[]>([]);
+  const [history, setHistory] = useState<RepetitionSession[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [sessionComplete, setSessionComplete] = useState(false);
-  const [history] = useState<RepetitionSession[]>(MOCK_HISTORY);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch flashcards and history from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchData = async () => {
+      try {
+        const [cardsResult, historyResult] = await Promise.all([
+          supabase.from('flashcards').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+          supabase.from('repetition_sessions').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+        ]);
+        
+        if (cardsResult.error) {
+          console.error('Error fetching flashcards:', cardsResult.error);
+        } else {
+          setCards(cardsResult.data || []);
+        }
+        
+        if (historyResult.error) {
+          console.error('Error fetching repetition sessions:', historyResult.error);
+        } else {
+          setHistory(historyResult.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [user?.id]);
+
+  const saveSession = async (cardsReviewed: number, accuracy: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('repetition_sessions')
+        .insert({
+          user_id: user?.id,
+          date: new Date().toISOString().split('T')[0],
+          cards_reviewed: cardsReviewed,
+          accuracy
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error saving session:', error);
+        return;
+      }
+      
+      setHistory(prev => [data, ...prev]);
+    } catch (err) {
+      console.error('Error saving session:', err);
+    }
+  };
 
   const currentCard = cards[currentIndex];
 
@@ -993,6 +1187,85 @@ export default function App() {
       document.body.style.overflow = '';
     }
   }, [mobileMenuOpen]);
+
+  // Check for existing session on mount using proper auth listener
+  useEffect(() => {
+    console.log('DEBUG: Setting up auth listener...');
+    
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('DEBUG: Initial session:', session);
+        
+        if (session?.user) {
+          // Fetch user profile from database
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          console.log('DEBUG: Initial profile fetch:', { profile, profileError });
+          
+          if (profileError) {
+            console.error('Initial profile fetch error:', profileError);
+            return;
+          }
+          
+          if (profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              year: profile.year_level as YearLevel
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Initial session check error:', error);
+      }
+    };
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('DEBUG: Auth state changed:', event, session);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Fetch user profile from database
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        
+        console.log('DEBUG: Profile fetch on sign in:', { profile, profileError });
+        
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          return;
+        }
+        
+        if (profile) {
+          setUser({
+            id: profile.id,
+            email: profile.email,
+            name: profile.name,
+            year: profile.year_level as YearLevel
+          });
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setShowInstallPrompt(false);
+      }
+    });
+
+    getInitialSession();
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - only runs once
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // PWA Install Prompt State
@@ -1276,7 +1549,7 @@ export default function App() {
             </div>
             
             <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              <SidebarCalendar />
+              <SidebarCalendar user={user} />
               
               <div className="mt-8 space-y-4">
                 <h4 className="font-black text-xs uppercase tracking-widest text-gray-400 mb-2">Années & Matières</h4>
@@ -1338,7 +1611,7 @@ export default function App() {
                </div>
             </div>
 
-            <SidebarCalendar />
+            <SidebarCalendar user={user} />
             
             <div className="mt-8 space-y-4">
               <h4 className="font-black text-xs uppercase tracking-widest text-gray-400 mb-2">Années & Matières</h4>
@@ -1410,8 +1683,8 @@ export default function App() {
              </div>
            )}
 
-           {view === 'planning' && <PlanningBoard />}
-           {view === 'repetition' && <SpacedRepetition />}
+           {view === 'planning' && <PlanningBoard user={user} />}
+           {view === 'repetition' && <SpacedRepetition user={user} />}
 
            {view === 'subject' && currentSubject && !activeContent && (
              <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
