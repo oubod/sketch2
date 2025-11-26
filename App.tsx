@@ -69,8 +69,8 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
               .eq('id', data.user.id)
               .single();
             
-            // Race the actual query execution
-            const result = await Promise.race([queryPromise, timeoutPromise]);
+            // Race the actual query execution with proper typing
+            const result = await Promise.race([queryPromise, timeoutPromise]) as { data: any, error: any };
             const { data: profile, error: profileError } = result;
             
             console.log('Profile fetch result:', { profile, profileError });
@@ -141,8 +141,8 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
               .eq('id', data.user.id)
               .single();
             
-            // Race the actual query execution
-            const result = await Promise.race([queryPromise, timeoutPromise]);
+            // Race the actual query execution with proper typing
+            const result = await Promise.race([queryPromise, timeoutPromise]) as { data: any, error: any };
             const { data: profile, error: profileError } = result;
             
             console.log('Profile fetch result after registration:', { profile, profileError });
