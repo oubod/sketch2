@@ -112,22 +112,12 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
               }
 
               console.log('Profile created successfully:', newProfile);
-              console.log('Calling onLogin with new profile...');
-              onLogin({
-                id: newProfile.id,
-                email: newProfile.email,
-                name: newProfile.name,
-                year: newProfile.year_level as YearLevel
-              });
+              console.log('Auth state listener will handle user state update...');
+              // onLogin removed - auth state listener will handle this
             } else {
               console.log('Profile found successfully:', profile);
-              console.log('Calling onLogin with existing profile...');
-              onLogin({
-                id: profile.id,
-                email: profile.email,
-                name: profile.name,
-                year: profile.year_level as YearLevel
-              });
+              console.log('Auth state listener will handle user state update...');
+              // onLogin removed - auth state listener will handle this
             }
           } catch (err) {
             console.error('Unexpected error during profile fetch:', err);
@@ -202,20 +192,10 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
 
               console.log('Profile created successfully after registration:', newProfile);
               
-              onLogin({
-                id: newProfile.id,
-                email: newProfile.email,
-                name: newProfile.name,
-                year: newProfile.year_level as YearLevel
-              });
+              // onLogin removed - auth state listener will handle this
             } else {
-              console.log('Registration successful, calling onLogin...');
-              onLogin({
-                id: profile.id,
-                email: profile.email,
-                name: profile.name,
-                year: profile.year_level as YearLevel
-              });
+              console.log('Registration successful, auth state listener will handle user state update...');
+              // onLogin removed - auth state listener will handle this
             }
           } catch (err) {
             console.error('Unexpected error during profile fetch after registration:', err);
