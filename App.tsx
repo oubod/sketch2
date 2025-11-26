@@ -5,9 +5,9 @@ import {
   Menu, X, Maximize, Minimize, ChevronRight, 
   Search, Brain, ArrowLeft, CheckCircle, Clock, Plus, Trash2, 
   Home, RefreshCw, ChevronDown, PanelLeftClose, PanelLeftOpen,
-  LogOut, User as UserIcon, Eye, EyeOff, History, Sparkles, Loader2
+  LogOut, User as UserIcon, Eye, EyeOff, History, Loader2
 } from 'lucide-react';
-import { MOCK_CURRICULUM, SUBJECT_ICONS, MOCK_EVENTS, MOCK_TASKS, MOCK_FLASHCARDS, MOCK_HISTORY } from './constants';
+import { MOCK_CURRICULUM, SUBJECT_ICONS } from './constants';
 import { YearLevel, Subject, ContentType, Lecture, Quiz, Exam, Note, CalendarEvent, StudyTask, Flashcard, UserProfile, RepetitionSession } from './types';
 import { supabase } from './supabase';
 
@@ -328,111 +328,121 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
 // 2. COMPONENTS
 // ==========================================
 
-// --- LECTURE READER (WITH FETCH & GEMINI) ---
+// --- SUBJECT CONTENT LIST (DYNAMIC FETCH) ---
 const LectureReader = ({ lectureData, year, subject }: { lectureData: any, year: string, subject: string }) => {
   const [content, setContent] = useState<Lecture | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [aiResponse, setAiResponse] = useState('');
-  const [askingAi, setAskingAi] = useState(false);
 
   useEffect(() => {
-    const fetchLectureContent = async () => {
-      setLoading(true);
+    const fetchLecture = async () => {
       try {
-        // Try fetching from the static file system structure
-        // Path: /data/DCEM2/Cardiologie/hta.json
-        if (lectureData.file) {
-            const response = await fetch(`/data/${year}/${subject}/${lectureData.file}`);
-            if (!response.ok) throw new Error('Fichier non trouvé');
-            const data = await response.json();
-            setContent(data);
-        } else {
-            // Fallback for demo/legacy data that is embedded
-            setContent(lectureData);
+        const { data, error } = await supabase
+          .from('lectures')
+          .select('*')
+          .eq('id', lectureData.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching lecture:', error);
+          setContent(null);
+          return;
         }
+
+        setContent(data);
       } catch (err) {
-        console.error("Fetch error:", err);
-        setError("Impossible de charger le contenu du cours. Vérifiez que le fichier JSON existe bien dans le dossier public/data.");
+        console.error('Error fetching lecture:', err);
+        setContent(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLectureContent();
-  }, [lectureData, year, subject]);
+    if (lectureData) {
+      fetchLecture();
+    }
+  }, [lectureData]);
 
-  const handleAskAI = async () => {
-    setAskingAi(true);
-    // SIMULATE GEMINI API CALL
-    setTimeout(() => {
-      setAiResponse("Voici un résumé généré par Gemini AI : Ce cours aborde les points essentiels de la pathologie, en mettant l'accent sur le diagnostic clinique et les complications majeures. N'oubliez pas la règle des 3 consultations.");
-      setAskingAi(false);
-    }, 1500);
-  };
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-sketch-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500 font-medium">Chargement du cours...</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-sketch-black" size={40} /></div>;
-  if (error) return <div className="p-10 text-center text-red-500 font-bold border-2 border-red-200 rounded-xl bg-red-50">{error}</div>;
-  if (!content) return null;
+  if (!content) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <BookOpen size={32} className="text-gray-400" />
+          </div>
+          <p className="text-gray-500 font-medium">Cours non trouvé</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto pb-20">
-      <div className="bg-white rounded-xl shadow-[4px_4px_0px_0px_#1a1a1a] border-2 border-sketch-black p-6 md:p-10 mb-10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-marker-yellow via-marker-pink to-marker-blue" />
-        <h1 className="text-3xl md:text-5xl font-black mb-4 text-gray-900 font-sans tracking-tight">{content.title}</h1>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-            <span className="flex items-center gap-1 text-sm font-bold text-gray-500 uppercase tracking-widest"><Clock size={16} /> {content.duration}</span>
-            <button 
-                onClick={handleAskAI}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-100 to-blue-100 border border-purple-200 text-purple-800 px-4 py-2 rounded-lg font-bold text-sm hover:shadow-md transition-all"
-            >
-                <Sparkles size={16} /> {askingAi ? 'Analyse en cours...' : 'Résumer avec Gemini'}
-            </button>
+    <div className="flex-1 bg-white p-6 overflow-y-auto custom-scrollbar">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-sketch-black rounded-xl flex items-center justify-center text-white">
+              <BookOpen size={24} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">{content.title}</h2>
+              <p className="text-gray-500">{subject} • {year}</p>
+            </div>
+          </div>
         </div>
-        {aiResponse && (
-            <div className="mt-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg animate-in fade-in slide-in-from-top-2">
-                <h4 className="font-bold text-purple-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-2"><Sparkles size={12}/> Réponse AI</h4>
-                <p className="font-serif text-purple-900">{aiResponse}</p>
-            </div>
-        )}
-      </div>
 
-      <div className="space-y-8 px-2 md:px-0">
-        {content.sections.map((section) => {
-          if (section.type === 'heading') return (
-              <div key={section.id} className="pt-4">
-                <h2 className="text-2xl md:text-3xl font-bold text-sketch-black relative inline-block">
-                  {section.content}
-                  <span className="absolute bottom-1 left-0 w-full h-3 bg-marker-yellow/40 -z-10 skew-x-12" />
-                </h2>
-              </div>
-          );
-          if (section.type === 'paragraph') return <p key={section.id} className="text-lg md:text-xl leading-relaxed text-gray-800 font-serif max-w-4xl">{section.content}</p>;
-          if (section.type === 'bullet') return (
-              <div key={section.id} className="flex gap-3 items-start pl-2 md:pl-4 max-w-4xl">
-                <div className="w-2 h-2 mt-2.5 bg-sketch-black rounded-full shrink-0" />
-                <p className="text-lg md:text-xl leading-relaxed text-gray-800">{section.content}</p>
-              </div>
-          );
-          if (section.type === 'highlight') return (
-              <div key={section.id} className={`bg-marker-${section.color || 'yellow'}/30 p-6 rounded-lg border-l-4 border-sketch-black my-6 max-w-4xl`}>
-                  <div className="flex items-center gap-2 mb-2 opacity-60 font-bold uppercase text-xs tracking-wider">
-                    <Brain size={14} /> Point Clé
-                  </div>
-                  <p className="font-hand text-2xl font-bold text-gray-900">{section.content}</p>
-              </div>
-          );
-          if (section.type === 'warning') return (
-            <div key={section.id} className="bg-red-50 p-4 md:p-6 rounded-xl border-2 border-dashed border-red-300 flex gap-4 items-start max-w-4xl">
-              <div className="bg-red-100 p-2 rounded-full text-red-600 shrink-0"><span className="text-xl font-bold">!</span></div>
-              <div>
-                <h4 className="font-bold text-red-800 uppercase text-xs tracking-widest mb-1">Attention</h4>
-                <p className="text-red-900 font-bold text-lg">{section.content}</p>
-              </div>
+        <div className="space-y-6">
+          {content.sections?.map((section: any) => (
+            <div key={section.id} className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {section.type === 'heading' && (
+                <h3 className="text-xl font-bold mb-4 text-sketch-black">{section.content}</h3>
+              )}
+              {section.type === 'paragraph' && (
+                <p className="text-gray-700 leading-relaxed mb-4">{section.content}</p>
+              )}
+              {section.type === 'bullet' && (
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-2 h-2 bg-sketch-black rounded-full mt-2 flex-shrink-0"></div>
+                  <p className="text-gray-700 leading-relaxed">{section.content}</p>
+                </div>
+              )}
+              {section.type === 'highlight' && (
+                <div className={`p-4 rounded-lg border-2 mb-4 ${
+                  section.color === 'yellow' ? 'bg-yellow-50 border-yellow-300' :
+                  section.color === 'pink' ? 'bg-pink-50 border-pink-300' :
+                  section.color === 'blue' ? 'bg-blue-50 border-blue-300' :
+                  'bg-green-50 border-green-300'
+                }`}>
+                  <p className="font-medium">{section.content}</p>
+                </div>
+              )}
+              {section.type === 'warning' && (
+                <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg mb-4">
+                  <p className="font-medium text-red-800">⚠️ {section.content}</p>
+                </div>
+              )}
+              {section.type === 'image' && (
+                <div className="mb-4">
+                  <img 
+                    src={section.content} 
+                    alt="Illustration" 
+                    className="w-full rounded-lg border-2 border-gray-200"
+                  />
+                </div>
+              )}
             </div>
-          );
-          return null;
-        })}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1156,7 +1166,6 @@ const QuizRunner = ({ quiz }: { quiz: Quiz }) => {
 // ==========================================
 
 export default function App() {
-  console.log('DEBUG: App component mounting...');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -1165,6 +1174,7 @@ export default function App() {
   const [currentSubject, setCurrentSubject] = useState<Subject | null>(null);
   const [activeContent, setActiveContent] = useState<{ type: ContentType, item: any } | null>(null);
   const [view, setView] = useState<'dashboard' | 'planning' | 'repetition' | 'subject'>('dashboard');
+  const [dashboardStats, setDashboardStats] = useState({ todoTasks: 0, flashcardsCount: 0 });
 
   // Handle body scroll lock and escape key for mobile menu
   useEffect(() => {
@@ -1265,6 +1275,29 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []); // Empty dependency array - only runs once
+
+  // Fetch dashboard stats
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchStats = async () => {
+      try {
+        const [tasksResult, flashcardsResult] = await Promise.all([
+          supabase.from('study_tasks').select('*').eq('user_id', user.id),
+          supabase.from('flashcards').select('*').eq('user_id', user.id)
+        ]);
+        
+        const todoTasks = tasksResult.data?.filter(t => t.status === 'todo').length || 0;
+        const flashcardsCount = flashcardsResult.data?.length || 0;
+        
+        setDashboardStats({ todoTasks, flashcardsCount });
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      }
+    };
+    
+    fetchStats();
+  }, [user?.id]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // PWA Install Prompt State
@@ -1555,10 +1588,7 @@ export default function App() {
                 {Object.entries(MOCK_CURRICULUM).map(([year, subjects]) => (
                   <div key={year} className="border-b border-gray-200 pb-2 last:border-0">
                     <button 
-                      onClick={() => {
-                        handleYearSelect(year as YearLevel);
-                        setMobileMenuOpen(false);
-                      }}
+                      onClick={() => handleYearSelect(year as YearLevel)}
                       className="w-full flex items-center justify-between py-2 px-1 hover:bg-gray-100 rounded-lg group"
                     >
                       <span className="font-bold text-lg">{year}</span>
@@ -1666,7 +1696,7 @@ export default function App() {
                         <Layout size={24} />
                       </div>
                       <h3 className="text-2xl font-bold mb-2">Planning</h3>
-                      <p className="text-gray-500">Organisez vos révisions. {MOCK_TASKS.filter(t => t.status === 'todo').length} tâches à faire.</p>
+                      <p className="text-gray-500">Organisez vos révisions. {dashboardStats.todoTasks} tâches à faire.</p>
                    </div>
                    <div 
                      onClick={() => setView('repetition')}
@@ -1676,7 +1706,7 @@ export default function App() {
                         <RefreshCw size={24} />
                       </div>
                       <h3 className="text-2xl font-bold mb-2">Révision Espacée</h3>
-                      <p className="text-gray-500">Testez vos connaissances. {MOCK_FLASHCARDS.length} cartes.</p>
+                      <p className="text-gray-500">Testez vos connaissances. {dashboardStats.flashcardsCount} cartes.</p>
                    </div>
                 </div>
              </div>
