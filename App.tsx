@@ -880,6 +880,7 @@ const QuizRunner = ({ quiz }: { quiz: Quiz }) => {
 // ==========================================
 
 export default function App() {
+  console.log('DEBUG: App component mounting...');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -894,56 +895,68 @@ export default function App() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
-  // Check for existing session on mount (separate from PWA logic)
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        // Fetch user profile from database
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+  // TEMPORARILY DISABLED - Check for existing session on mount (causing infinite refresh)
+  // useEffect(() => {
+  //   console.log('DEBUG: Auth useEffect starting');
+  //   const checkSession = async () => {
+  //     try {
+  //       console.log('DEBUG: Checking session...');
+  //       const { data: { session } } = await supabase.auth.getSession();
+  //       console.log('DEBUG: Session result:', session);
+  //       if (session?.user) {
+  //         // Fetch user profile from database
+  //         const { data: profile, error: profileError } = await supabase
+  //           .from('profiles')
+  //           .select('*')
+  //           .eq('id', session.user.id)
+  //           .single();
 
-        if (!profileError && profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            year: profile.year_level as YearLevel
-          });
-        }
-      }
-    };
+  //         if (!profileError && profile) {
+  //           setUser({
+  //             id: profile.id,
+  //             email: profile.email,
+  //             name: profile.name,
+  //             year: profile.year_level as YearLevel
+  //           });
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('DEBUG: Session check error:', error);
+  //     }
+  //   };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Fetch user profile from database
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+  //   try {
+  //     // Listen for auth changes
+  //     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+  //       console.log('DEBUG: Auth state change:', event, session);
+  //       if (event === 'SIGNED_IN' && session?.user) {
+  //         // Fetch user profile from database
+  //         const { data: profile, error: profileError } = await supabase
+  //           .from('profiles')
+  //           .select('*')
+  //           .eq('id', session.user.id)
+  //           .single();
 
-        if (!profileError && profile) {
-          setUser({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            year: profile.year_level as YearLevel
-          });
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setShowInstallPrompt(false);
-      }
-    });
+  //         if (!profileError && profile) {
+  //           setUser({
+  //             id: profile.id,
+  //             email: profile.email,
+  //             name: profile.name,
+  //             year: profile.year_level as YearLevel
+  //           });
+  //         }
+  //       } else if (event === 'SIGNED_OUT') {
+  //         setUser(null);
+  //         setShowInstallPrompt(false);
+  //       }
+  //     });
 
-    checkSession();
-    return () => subscription.unsubscribe();
-  }, []); // Empty dependency array - only runs once
+  //     checkSession();
+  //     return () => subscription.unsubscribe();
+  //   } catch (error) {
+  //     console.error('DEBUG: Auth setup error:', error);
+  //   }
+  // }, []); // Empty dependency array - only runs once
 
   // Separate useEffect for PWA install prompt listener
   useEffect(() => {
