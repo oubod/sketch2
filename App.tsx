@@ -72,6 +72,7 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
           }
 
           if (!profile) {
+            console.log('No profile found for user:', data.user.id);
             setError('Profil utilisateur non trouvé. Veuillez vous inscrire.');
             return;
           }
@@ -128,6 +129,7 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserProfile) => void }) => {
           }
 
           if (!profile) {
+            console.log('No profile found after registration for user:', data.user.id);
             setError('Profil utilisateur non trouvé après inscription.');
             return;
           }
