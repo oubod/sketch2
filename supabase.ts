@@ -9,15 +9,15 @@
 // Mock supabase to prevent crashes
 export const supabase = {
   auth: {
-    signInWithPassword: () => Promise.resolve({ data: { user: null }, error: null }),
-    signUp: () => Promise.resolve({ data: { user: null }, error: null }),
+    signInWithPassword: (credentials: any) => Promise.resolve({ data: { user: null }, error: null }),
+    signUp: (credentials: any) => Promise.resolve({ data: { user: null }, error: null }),
     signOut: () => Promise.resolve({ error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    onAuthStateChange: (callback: any) => ({ data: { subscription: { unsubscribe: () => {} } } }),
     getSession: () => Promise.resolve({ data: { session: null } })
   },
-  from: () => ({
-    select: () => ({
-      eq: () => ({
+  from: (table: string) => ({
+    select: (columns: string) => ({
+      eq: (column: string, value: any) => ({
         single: () => Promise.resolve({ data: null, error: null })
       })
     })
