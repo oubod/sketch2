@@ -2,10 +2,7 @@ const CACHE_NAME = 'medisketch-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Inter:wght@400;600;700&display=swap',
-  'https://cdn-icons-png.flaticon.com/512/2966/2966327.png'
+  '/manifest.json'
 ];
 
 // Install event - cache essential assets
