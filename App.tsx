@@ -604,10 +604,9 @@ const SidebarCalendar = ({ user }: { user: UserProfile | null }) => {
     setSelectedDate(selectedDate === dateStr ? null : dateStr);
   };
 
-  const addEvent = () => {
+  const handleAddEvent = () => {
     if (!newEventTitle || !selectedDate) return;
-    setEvents([...events, { id: Date.now().toString(), date: selectedDate, title: newEventTitle, type: 'study' }]);
-    setNewEventTitle('');
+    addEvent(selectedDate, newEventTitle);
   };
 
   const getEventsForDay = (day: number) => {
@@ -667,7 +666,7 @@ const SidebarCalendar = ({ user }: { user: UserProfile | null }) => {
               className="flex-1 text-xs border border-gray-300 rounded px-1 py-1" 
               placeholder="Ajouter..." 
             />
-            <button onClick={addEvent} className="bg-sketch-black text-white p-1 rounded"><Plus size={12} /></button>
+            <button onClick={handleAddEvent} className="bg-sketch-black text-white p-1 rounded"><Plus size={12} /></button>
           </div>
         </div>
       )}
